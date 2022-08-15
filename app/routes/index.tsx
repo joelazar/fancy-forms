@@ -14,9 +14,9 @@ export default function Index() {
               />
             </div>
             <div className="relative space-y-32 px-4 pt-16 pb-8 sm:px-6 sm:pt-24 sm:pb-14 lg:px-8 lg:pb-20 lg:pt-32">
-              <h1 className="pt-96 text-center text-3xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="pt-96 pr-64 pl-64 text-center text-3xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
                 <Link
-                  to="problem"
+                  to="notes"
                   className="block uppercase text-red-400 underline drop-shadow-md"
                 >
                   Fancy forms

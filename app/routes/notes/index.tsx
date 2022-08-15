@@ -1,6 +1,7 @@
 import type { Note } from "@prisma/client";
 import { Form, useLoaderData, useTransition } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/server-runtime";
+import { useEffect, useRef } from "react";
 import { prisma } from "~/db.server";
 
 type LoaderData = {
@@ -32,6 +33,16 @@ export default function NotesRoute() {
     transition.state === "submitting" &&
     transition.submission.formData.get("_action") === "create";
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isCreating) {
+      formRef.current?.reset();
+      titleRef.current?.focus();
+    }
+  }, [isCreating]);
+
   return (
     <>
       <div className="flex max-w-3xl space-x-2 p-4">
@@ -52,12 +63,14 @@ export default function NotesRoute() {
         <Form
           method="post"
           className="flex max-w-xl flex-col space-y-2 bg-gray-100 p-4"
+          ref={formRef}
         >
           <input
             type="text"
             name="title"
             placeholder="Title"
             className="rounded border border-black p-2"
+            ref={titleRef}
           />
           <textarea
             name="body"

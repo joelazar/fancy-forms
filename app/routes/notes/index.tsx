@@ -79,6 +79,14 @@ export default function NotesRoute() {
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (window.confirm("Are you sure you want to delete this note?")) {
+      fetcher.submit(event.currentTarget);
+    }
+  }
+
   useEffect(() => {
     if (!isCreating) {
       formRef.current?.reset();
@@ -100,13 +108,12 @@ export default function NotesRoute() {
                 <li>Created at: {note.createdAt}</li>
                 <li>Body: {note.body}</li>
               </ul>
-              <fetcher.Form method="post">
+              <fetcher.Form method="post" onSubmit={handleSubmit}>
                 <input type="hidden" name="id" value={note.id} />
+                <input type="hidden" name="_intent" value="delete" />
                 <button
                   type="submit"
                   className="rounded bg-red-500 py-2 px-4 font-bold text-white hover:bg-red-700"
-                  name="_intent"
-                  value="delete"
                 >
                   {failedDeleteNoteId === note.id ? "Retry PLS" : "Delete"}
                 </button>

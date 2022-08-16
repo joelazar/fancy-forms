@@ -1,11 +1,5 @@
 import type { Note } from "@prisma/client";
-import {
-  Form,
-  useActionData,
-  useFetcher,
-  useLoaderData,
-  useTransition,
-} from "@remix-run/react";
+import { useActionData, useFetcher, useLoaderData } from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/server-runtime";
 import { useEffect, useRef } from "react";
 import { prisma } from "~/db.server";
@@ -63,16 +57,15 @@ export default function NotesRoute() {
   const { notes } = useLoaderData<LoaderData>();
   const actionData = useActionData<typeof action>();
 
-  const transition = useTransition();
-  const isCreating =
-    transition.state === "submitting" &&
-    transition.submission.formData.get("_intent") === "create";
-
   const fetcher = useFetcher();
   const deletedNoteId =
     fetcher.submission?.formData.get("_intent") === "delete"
       ? fetcher.submission?.formData.get("id")
       : null;
+
+  const isCreating =
+    fetcher.state === "submitting" &&
+    fetcher.submission.formData.get("_intent") === "create";
 
   const failedDeleteNoteId = fetcher.data?.error ? fetcher.data?.id : null;
 
@@ -123,7 +116,7 @@ export default function NotesRoute() {
         })}
       </div>
       <div className="p-4">
-        <Form
+        <fetcher.Form
           method="post"
           className="flex max-w-xl flex-col space-y-2 bg-gray-100 p-4"
           ref={formRef}
@@ -153,7 +146,7 @@ export default function NotesRoute() {
           {actionData?.error ? (
             <p className="font-bold text-red-500">{actionData.error}</p>
           ) : null}
-        </Form>
+        </fetcher.Form>
       </div>
     </>
   );

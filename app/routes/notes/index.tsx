@@ -1,5 +1,10 @@
 import type { Note } from "@prisma/client";
-import { Form, useLoaderData, useTransition } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useTransition,
+} from "@remix-run/react";
 import type { ActionFunction, LoaderFunction } from "@remix-run/server-runtime";
 import { useEffect, useRef } from "react";
 import { prisma } from "~/db.server";
@@ -45,6 +50,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 export default function NotesRoute() {
   const { notes } = useLoaderData<LoaderData>();
+  const actionData = useActionData<typeof action>();
 
   const transition = useTransition();
   const isCreating =
@@ -116,6 +122,9 @@ export default function NotesRoute() {
           >
             {isCreating ? "Creating" : "Create"}
           </button>
+          {actionData?.error ? (
+            <p className="font-bold text-red-500">{actionData.error}</p>
+          ) : null}
         </Form>
       </div>
     </>

@@ -15,14 +15,32 @@ export const loader: LoaderFunction = async () => {
 
 export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
-  const [title, body] = [form.get("title"), form.get("body")];
-  if (typeof title !== "string" || !title) {
-    return { error: "Title is required" };
+
+  const intent = form.get("_intent");
+
+  if (intent === "delete") {
+    const id = form.get("id");
+    if (typeof id !== "string" || !id) {
+      return { error: "Missing id" };
+    }
+    return await prisma.note.delete({
+      where: {
+        id,
+      },
+    });
   }
-  if (typeof body !== "string" || !body) {
-    return { error: "Body is required" };
+  if (intent === "create") {
+    const [title, body] = [form.get("title"), form.get("body")];
+    if (typeof title !== "string" || !title) {
+      return { error: "Title is required" };
+    }
+    if (typeof body !== "string" || !body) {
+      return { error: "Body is required" };
+    }
+    return await prisma.note.create({ data: { title, body } });
   }
-  return await prisma.note.create({ data: { title, body } });
+
+  return { error: "Unknown intent" };
 };
 
 export default function NotesRoute() {
@@ -56,6 +74,17 @@ export default function NotesRoute() {
               <li>Created at: {note.createdAt}</li>
               <li>Body: {note.body}</li>
             </ul>
+            <Form method="post">
+              <input type="hidden" name="id" value={note.id} />
+              <button
+                type="submit"
+                className="rounded bg-red-500 py-2 px-4 font-bold text-white hover:bg-red-700"
+                name="_intent"
+                value="delete"
+              >
+                Delete
+              </button>
+            </Form>
           </div>
         ))}
       </div>
@@ -80,7 +109,7 @@ export default function NotesRoute() {
             cols={50}
           />
           <button
-            name="_action"
+            name="_intent"
             type="submit"
             value="create"
             className="border-2 border-green-700 bg-green-100 font-bold"

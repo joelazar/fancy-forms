@@ -2,6 +2,7 @@ import type { Note } from "@prisma/client";
 import {
   Form,
   useActionData,
+  useFetcher,
   useLoaderData,
   useTransition,
 } from "@remix-run/react";
@@ -28,11 +29,21 @@ export const action: ActionFunction = async ({ request, params }) => {
     if (typeof id !== "string" || !id) {
       return { error: "Missing id" };
     }
-    return await prisma.note.delete({
-      where: {
-        id,
-      },
-    });
+    // sleep 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      if (Math.random() > 0.5) {
+        throw new Error("Random error");
+      }
+
+      return await prisma.note.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      return { error: "Error deleting note", id };
+    }
   }
   if (intent === "create") {
     const [title, body] = [form.get("title"), form.get("body")];
@@ -55,7 +66,15 @@ export default function NotesRoute() {
   const transition = useTransition();
   const isCreating =
     transition.state === "submitting" &&
-    transition.submission.formData.get("_action") === "create";
+    transition.submission.formData.get("_intent") === "create";
+
+  const fetcher = useFetcher();
+  const deletedNoteId =
+    fetcher.submission?.formData.get("_intent") === "delete"
+      ? fetcher.submission?.formData.get("id")
+      : null;
+
+  const failedDeleteNoteId = fetcher.data?.error ? fetcher.data?.id : null;
 
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -70,29 +89,31 @@ export default function NotesRoute() {
   return (
     <>
       <div className="flex max-w-3xl space-x-2 p-4">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="flex max-w-sm flex-auto flex-col rounded border border-black bg-yellow-200 p-4 sm:p-6 lg:p-8"
-          >
-            <h2 className="text-2xl font-bold">{note.title}</h2>
-            <ul className="text-lg">
-              <li>Created at: {note.createdAt}</li>
-              <li>Body: {note.body}</li>
-            </ul>
-            <Form method="post">
-              <input type="hidden" name="id" value={note.id} />
-              <button
-                type="submit"
-                className="rounded bg-red-500 py-2 px-4 font-bold text-white hover:bg-red-700"
-                name="_intent"
-                value="delete"
-              >
-                Delete
-              </button>
-            </Form>
-          </div>
-        ))}
+        {notes.map((note) => {
+          return note.id === deletedNoteId ? null : (
+            <div
+              key={note.id}
+              className="flex max-w-sm flex-auto flex-col rounded border border-black bg-yellow-200 p-4 sm:p-6 lg:p-8"
+            >
+              <h2 className="text-2xl font-bold">{note.title}</h2>
+              <ul className="text-lg">
+                <li>Created at: {note.createdAt}</li>
+                <li>Body: {note.body}</li>
+              </ul>
+              <fetcher.Form method="post">
+                <input type="hidden" name="id" value={note.id} />
+                <button
+                  type="submit"
+                  className="rounded bg-red-500 py-2 px-4 font-bold text-white hover:bg-red-700"
+                  name="_intent"
+                  value="delete"
+                >
+                  {failedDeleteNoteId === note.id ? "Retry PLS" : "Delete"}
+                </button>
+              </fetcher.Form>
+            </div>
+          );
+        })}
       </div>
       <div className="p-4">
         <Form
